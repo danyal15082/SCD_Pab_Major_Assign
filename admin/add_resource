@@ -1,0 +1,55 @@
+<?php
+require_once '../config/config.php';
+requireAdmin(); // Make sure only admin can access
+
+$page_title = 'Add Resource';
+include '../includes/header.php';
+
+// Get flash message if exists
+$flash = getFlashMessage();
+?>
+
+<div class="container mt-5">
+    <h2>Add New Resource</h2>
+
+    <!-- Display flash message -->
+    <?php if ($flash): ?>
+        <div class="alert alert-<?php echo $flash['type'] === 'error' ? 'danger' : $flash['type']; ?> alert-dismissible fade show" role="alert">
+            <?php echo $flash['message']; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
+    <form method="POST" action="process_add_resource.php" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="resource_name">Resource Name</label>
+            <input type="text" class="form-control" id="resource_name" name="resource_name" required>
+        </div>
+        <div class="form-group mt-3">
+            <label for="category_id">Category</label>
+            <select class="form-control" id="category_id" name="category_id" required>
+                <option value="">Select Category</option>
+                <?php
+                $sql = "SELECT category_id, category_name FROM resource_categories ORDER BY category_name";
+                $result = $conn->query($sql);
+                if ($result && $result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                        echo "<option value='{$row['category_id']}'>{$row['category_name']}</option>";
+                    }
+                }
+                ?>
+            </select>
+        </div>
+        <div class="form-group mt-3">
+            <label for="status">Status</label>
+            <select class="form-control" id="status" name="status" required>
+                <option value="available">Available</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="unavailable">Unavailable</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Add Resource</button>
+    </form>
+</div>
+
+<?php include '../includes/footer.php'; ?>

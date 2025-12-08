@@ -1,0 +1,158 @@
+<?php
+/**
+ * Add User - Admin
+ * Classroom Resource Booking System
+ */
+
+require_once '../config/config.php';
+requireAdmin();
+
+// Check if form was submitted
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $conn = getDBConnection();
+    
+    // Sanitize input
+    $full_name = sanitizeInput($conn, $_POST['full_name']);
+    $email = sanitizeInput($conn, $_POST['email']);
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
+    $phone = sanitizeInput($conn, $_POST['phone'] ?? '');
+    $department = sanitizeInput($conn, $_POST['department'] ?? '');
+    $role = sanitizeInput($conn, $_POST['role']);
+    $status = sanitizeInput($conn, $_POST['status']);
+
+    // Validate
+    if (empty($full_name) || empty($email) || empty($password) || empty($role) || empty($status)) {
+        setFlashMessage('Please fill in all required fields.', 'error');
+        redirect('add_user.php');
+        exit;
+    }
+
+    // Validate email format
+    if (!isValidEmail($email)) {
+        setFlashMessage('Invalid email format.', 'error');
+        redirect('add_user.php');
+        exit;
+    }
+
+    // Check if passwords match
+    if ($password !== $confirm_password) {
+        setFlashMessage('Passwords do not match.', 'error');
+        redirect('add_user.php');
+        exit;
+    }
+
+    // Check if password is strong enough (at least 6 characters)
+    if (strlen($password) < 6) {
+        setFlashMessage('Password must be at least 6 characters long.', 'error');
+        redirect('add_user.php');
+        exit;
+    }
+
+    // Check if email already exists
+    $sql = "SELECT user_id FROM users WHERE email = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        setFlashMessage('Email is already registered.', 'error');
+        redirect('add_user.php');
+        exit;
+    }
+    $stmt->close();
+
+    // Hash password
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+    // Insert into database
+    $sql = "INSERT INTO users (full_name, email, password, phone, department, role, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+    $stmt = $conn->prepare($sql);
+
+    if ($stmt === false) {
+        setFlashMessage('Prepare failed: ' . $conn->error, 'error');
+        redirect('add_user.php');
+        exit;
+    }
+
+    $stmt->bind_param("sssssss", $full_name, $email, $hashed_password, $phone, $department, $role, $status);
+
+    if ($stmt->execute()) {
+        setFlashMessage('User added successfully!', 'success');
+    } else {
+        setFlashMessage('Execute failed: ' . $stmt->error, 'error');
+    }
+
+    $stmt->close();
+    closeDBConnection($conn);
+    redirect('manage_users.php');
+    exit;
+}
+
+$page_title = 'Add User';
+include '../includes/header.php';
+
+// Get flash message if exists
+$flash = getFlashMessage();
+?>
+
+<div class="container mt-5">
+    <h2>Add New User</h2>
+
+    <!-- Display flash message -->
+    <?php if ($flash): ?>
+        <div class="alert alert-<?php echo $flash['type'] === 'error' ? 'danger' : $flash['type']; ?> alert-dismissible fade show" role="alert">
+            <?php echo $flash['message']; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
+    <form method="POST" action="add_user.php">
+        <div class="form-group">
+            <label for="full_name">Full Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="full_name" name="full_name" required>
+        </div>
+        <div class="form-group mt-3">
+            <label for="email">Email <span class="text-danger">*</span></label>
+            <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        <div class="form-group mt-3">
+            <label for="password">Password <span class="text-danger">*</span></label>
+            <input type="password" class="form-control" id="password" name="password" required minlength="6">
+            <small class="form-text text-muted">Minimum 6 characters</small>
+        </div>
+        <div class="form-group mt-3">
+            <label for="confirm_password">Confirm Password <span class="text-danger">*</span></label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required minlength="6">
+        </div>
+        <div class="form-group mt-3">
+            <label for="phone">Phone</label>
+            <input type="text" class="form-control" id="phone" name="phone">
+        </div>
+        <div class="form-group mt-3">
+            <label for="department">Department</label>
+            <input type="text" class="form-control" id="department" name="department">
+        </div>
+        <div class="form-group mt-3">
+            <label for="role">Role <span class="text-danger">*</span></label>
+            <select class="form-control" id="role" name="role" required>
+                <option value="">Select Role</option>
+                <option value="admin">Admin</option>
+                <option value="user">User</option>
+            </select>
+        </div>
+        <div class="form-group mt-3">
+            <label for="status">Status <span class="text-danger">*</span></label>
+            <select class="form-control" id="status" name="status" required>
+                <option value="">Select Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Add User</button>
+        <a href="manage_users.php" class="btn btn-secondary mt-3">Cancel</a>
+    </form>
+</div>
+
+<?php include '../includes/footer.php'; ?>

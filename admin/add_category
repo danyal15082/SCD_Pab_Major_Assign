@@ -1,0 +1,88 @@
+<?php
+/**
+ * Add Resource Category - Admin
+ * Classroom Resource Booking System
+ */
+
+require_once '../config/config.php';
+requireAdmin();
+
+// Check if form was submitted
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $conn = getDBConnection();
+    
+    // Sanitize input
+    $category_name = sanitizeInput($conn, $_POST['category_name']);
+    $description = sanitizeInput($conn, $_POST['description'] ?? '');
+
+    // Validate
+    if (empty($category_name)) {
+        setFlashMessage('Please enter a category name.', 'error');
+        redirect('add_category.php');
+        exit;
+    }
+
+    // Make sure $conn exists
+    if (!isset($conn) || $conn === null) {
+        setFlashMessage('Database connection not established.', 'error');
+        redirect('add_category.php');
+        exit;
+    }
+
+    // Insert into database
+    $sql = "INSERT INTO resource_categories (category_name, description, created_at) VALUES (?, ?, NOW())";
+    $stmt = $conn->prepare($sql);
+
+    if ($stmt === false) {
+        setFlashMessage('Prepare failed: ' . $conn->error, 'error');
+        redirect('add_category.php');
+        exit;
+    }
+
+    $stmt->bind_param("ss", $category_name, $description);
+
+    if ($stmt->execute()) {
+        setFlashMessage('Category added successfully!', 'success');
+    } else {
+        setFlashMessage('Execute failed: ' . $stmt->error, 'error');
+    }
+
+    $stmt->close();
+    closeDBConnection($conn);
+    redirect('manage_categories.php');
+    exit;
+}
+
+$page_title = 'Add Category';
+include '../includes/header.php';
+
+// Get flash message if exists
+$flash = getFlashMessage();
+?>
+
+<div class="container mt-5">
+    <h2>Add New Category</h2>
+
+    <!-- Display flash message -->
+    <?php if ($flash): ?>
+        <div class="alert alert-<?php echo $flash['type'] === 'error' ? 'danger' : $flash['type']; ?> alert-dismissible fade show" role="alert">
+            <?php echo $flash['message']; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
+    <form method="POST" action="add_category.php">
+        <div class="form-group">
+            <label for="category_name">Category Name</label>
+            <input type="text" class="form-control" id="category_name" name="category_name" required>
+        </div>
+        <div class="form-group mt-3">
+            <label for="description">Description</label>
+            <textarea class="form-control" id="description" name="description" rows="4"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Add Category</button>
+        <a href="manage_categories.php" class="btn btn-secondary mt-3">Cancel</a>
+    </form>
+</div>
+
+<?php include '../includes/footer.php'; ?>
