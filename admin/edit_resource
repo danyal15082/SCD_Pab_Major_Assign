@@ -1,0 +1,162 @@
+<?php
+/**
+ * Edit Resource - Admin
+ * Classroom Resource Booking System
+ */
+
+require_once '../config/config.php';
+requireAdmin();
+
+$conn = getDBConnection();
+
+// Get resource ID from URL
+$resource_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+if (!$resource_id) {
+    setFlashMessage('Invalid resource ID.', 'error');
+    redirect('manage_resources.php');
+    exit;
+}
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Sanitize input
+    $resource_name = sanitizeInput($conn, $_POST['resource_name']);
+    $resource_code = sanitizeInput($conn, $_POST['resource_code']);
+    $category_id = isset($_POST['category_id']) ? (int)$_POST['category_id'] : 0;
+    $capacity = isset($_POST['capacity']) ? (int)$_POST['capacity'] : 0;
+    $location = sanitizeInput($conn, $_POST['location'] ?? '');
+    $description = sanitizeInput($conn, $_POST['description'] ?? '');
+    $status = sanitizeInput($conn, $_POST['status']);
+
+    // Validate
+    if (empty($resource_name) || empty($resource_code) || empty($category_id) || empty($status)) {
+        setFlashMessage('Please fill in all required fields.', 'error');
+        redirect('edit_resource.php?id=' . $resource_id);
+        exit;
+    }
+
+    // Check if resource code is already taken by another resource
+    $sql = "SELECT resource_id FROM resources WHERE resource_code = ? AND resource_id != ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("si", $resource_code, $resource_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        setFlashMessage('Resource code is already in use by another resource.', 'error');
+        redirect('edit_resource.php?id=' . $resource_id);
+        exit;
+    }
+    $stmt->close();
+
+    // Update in database
+    $sql = "UPDATE resources SET resource_name = ?, resource_code = ?, category_id = ?, capacity = ?, location = ?, description = ?, status = ?, updated_at = NOW() WHERE resource_id = ?";
+    $stmt = $conn->prepare($sql);
+
+    if ($stmt === false) {
+        setFlashMessage('Prepare failed: ' . $conn->error, 'error');
+        redirect('edit_resource.php?id=' . $resource_id);
+        exit;
+    }
+
+    $stmt->bind_param("ssiiissi", $resource_name, $resource_code, $category_id, $capacity, $location, $description, $status, $resource_id);
+
+    if ($stmt->execute()) {
+        setFlashMessage('Resource updated successfully!', 'success');
+    } else {
+        setFlashMessage('Execute failed: ' . $stmt->error, 'error');
+    }
+
+    $stmt->close();
+    redirect('manage_resources.php');
+    exit;
+}
+
+// Fetch resource data
+$sql = "SELECT * FROM resources WHERE resource_id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $resource_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows === 0) {
+    setFlashMessage('Resource not found.', 'error');
+    redirect('manage_resources.php');
+    exit;
+}
+
+$resource = $result->fetch_assoc();
+$stmt->close();
+
+$page_title = 'Edit Resource';
+include '../includes/header.php';
+
+// Get flash message if exists
+$flash = getFlashMessage();
+?>
+
+<div class="container mt-5">
+    <h2>Edit Resource</h2>
+
+    <!-- Display flash message -->
+    <?php if ($flash): ?>
+        <div class="alert alert-<?php echo $flash['type'] === 'error' ? 'danger' : $flash['type']; ?> alert-dismissible fade show" role="alert">
+            <?php echo $flash['message']; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
+    <form method="POST" action="edit_resource.php?id=<?php echo $resource_id; ?>">
+        <div class="form-group">
+            <label for="resource_name">Resource Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="resource_name" name="resource_name" value="<?php echo htmlspecialchars($resource['resource_name'] ?? ''); ?>" required>
+        </div>
+        <div class="form-group mt-3">
+            <label for="resource_code">Resource Code <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="resource_code" name="resource_code" value="<?php echo htmlspecialchars($resource['resource_code'] ?? ''); ?>" required>
+        </div>
+        <div class="form-group mt-3">
+            <label for="category_id">Category <span class="text-danger">*</span></label>
+            <select class="form-control" id="category_id" name="category_id" required>
+                <option value="">Select Category</option>
+                <?php
+                $sql = "SELECT category_id, category_name FROM resource_categories ORDER BY category_name";
+                $result = $conn->query($sql);
+                if ($result && $result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                        $selected = ($row['category_id'] == $resource['category_id']) ? 'selected' : '';
+                        echo "<option value='{$row['category_id']}' {$selected}>{$row['category_name']}</option>";
+                    }
+                }
+                ?>
+            </select>
+        </div>
+        <div class="form-group mt-3">
+            <label for="capacity">Capacity</label>
+            <input type="number" class="form-control" id="capacity" name="capacity" value="<?php echo htmlspecialchars($resource['capacity'] ?? ''); ?>" min="0">
+        </div>
+        <div class="form-group mt-3">
+            <label for="location">Location</label>
+            <input type="text" class="form-control" id="location" name="location" value="<?php echo htmlspecialchars($resource['location'] ?? ''); ?>">
+        </div>
+        <div class="form-group mt-3">
+            <label for="description">Description</label>
+            <textarea class="form-control" id="description" name="description" rows="4"><?php echo htmlspecialchars($resource['description'] ?? ''); ?></textarea>
+        </div>
+        <div class="form-group mt-3">
+            <label for="status">Status <span class="text-danger">*</span></label>
+            <select class="form-control" id="status" name="status" required>
+                <option value="">Select Status</option>
+                <option value="available" <?php echo $resource['status'] === 'available' ? 'selected' : ''; ?>>Available</option>
+                <option value="maintenance" <?php echo $resource['status'] === 'maintenance' ? 'selected' : ''; ?>>Maintenance</option>
+                <option value="unavailable" <?php echo $resource['status'] === 'unavailable' ? 'selected' : ''; ?>>Unavailable</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Update Resource</button>
+        <a href="manage_resources.php" class="btn btn-secondary mt-3">Cancel</a>
+    </form>
+</div>
+
+<?php closeDBConnection($conn); ?>
+<?php include '../includes/footer.php'; ?>
