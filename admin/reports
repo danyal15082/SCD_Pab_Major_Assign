@@ -1,0 +1,276 @@
+<?php
+/**
+ * Reports - Admin
+ * Classroom Resource Booking System
+ */
+
+require_once '../config/config.php';
+requireAdmin();
+
+$conn = getDBConnection();
+
+// Booking Statistics
+$booking_stats_sql = "SELECT 
+    COUNT(*) as total,
+    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+    SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+    SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected,
+    SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
+    FROM bookings";
+$booking_stats = executeQuery($conn, $booking_stats_sql)->fetch_assoc();
+
+// Most Booked Resources
+$popular_resources_sql = "SELECT r.resource_name, r.resource_code, rc.category_name, 
+    COUNT(b.booking_id) as booking_count
+    FROM resources r
+    LEFT JOIN bookings b ON r.resource_id = b.resource_id
+    LEFT JOIN resource_categories rc ON r.category_id = rc.category_id
+    GROUP BY r.resource_id
+    ORDER BY booking_count DESC
+    LIMIT 10";
+$popular_resources = executeQuery($conn, $popular_resources_sql);
+
+// Most Active Users
+$active_users_sql = "SELECT u.full_name, u.email, u.department,
+    COUNT(b.booking_id) as booking_count,
+    SUM(CASE WHEN b.status = 'approved' THEN 1 ELSE 0 END) as approved_count
+    FROM users u
+    LEFT JOIN bookings b ON u.user_id = b.user_id
+    WHERE u.role = 'user'
+    GROUP BY u.user_id
+    ORDER BY booking_count DESC
+    LIMIT 10";
+$active_users = executeQuery($conn, $active_users_sql);
+
+// Monthly Booking Trends (Last 6 Months)
+$monthly_trends_sql = "SELECT 
+    DATE_FORMAT(booking_date, '%Y-%m') as month,
+    COUNT(*) as total_bookings,
+    SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved_bookings
+    FROM bookings
+    WHERE booking_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+    GROUP BY DATE_FORMAT(booking_date, '%Y-%m')
+    ORDER BY month DESC";
+$monthly_trends = executeQuery($conn, $monthly_trends_sql);
+
+// Category-wise Resource Utilization
+$category_stats_sql = "SELECT rc.category_name, 
+    COUNT(DISTINCT r.resource_id) as total_resources,
+    COUNT(b.booking_id) as total_bookings
+    FROM resource_categories rc
+    LEFT JOIN resources r ON rc.category_id = r.category_id
+    LEFT JOIN bookings b ON r.resource_id = b.resource_id
+    GROUP BY rc.category_id
+    ORDER BY total_bookings DESC";
+$category_stats = executeQuery($conn, $category_stats_sql);
+
+closeDBConnection($conn);
+
+$page_title = 'Reports & Analytics';
+include '../includes/header.php';
+?>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-chart-bar"></i> Reports & Analytics</h2>
+        <button class="btn btn-secondary btn-print" onclick="window.print()">
+            <i class="fas fa-print"></i> Print Report
+        </button>
+    </div>
+
+    <!-- Booking Statistics Overview -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-chart-pie"></i> Booking Statistics Overview
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md">
+                    <h3 class="text-primary"><?php echo $booking_stats['total']; ?></h3>
+                    <p class="text-muted">Total Bookings</p>
+                </div>
+                <div class="col-md">
+                    <h3 class="text-warning"><?php echo $booking_stats['pending']; ?></h3>
+                    <p class="text-muted">Pending</p>
+                </div>
+                <div class="col-md">
+                    <h3 class="text-success"><?php echo $booking_stats['approved']; ?></h3>
+                    <p class="text-muted">Approved</p>
+                </div>
+                <div class="col-md">
+                    <h3 class="text-danger"><?php echo $booking_stats['rejected']; ?></h3>
+                    <p class="text-muted">Rejected</p>
+                </div>
+                <div class="col-md">
+                    <h3 class="text-secondary"><?php echo $booking_stats['cancelled']; ?></h3>
+                    <p class="text-muted">Cancelled</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Most Booked Resources -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-star"></i> Top 10 Most Booked Resources
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Resource</th>
+                                    <th>Category</th>
+                                    <th>Bookings</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php 
+                                $rank = 1;
+                                while ($resource = $popular_resources->fetch_assoc()): 
+                                ?>
+                                <tr>
+                                    <td><?php echo $rank++; ?></td>
+                                    <td><?php echo htmlspecialchars($resource['resource_name']); ?><br>
+                                        <small class="text-muted"><?php echo htmlspecialchars($resource['resource_code']); ?></small>
+                                    </td>
+                                    <td><?php echo htmlspecialchars($resource['category_name']); ?></td>
+                                    <td><span class="badge badge-primary"><?php echo $resource['booking_count']; ?></span></td>
+                                </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Most Active Users -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-users"></i> Top 10 Most Active Users
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>User</th>
+                                    <th>Department</th>
+                                    <th>Total</th>
+                                    <th>Approved</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php 
+                                $rank = 1;
+                                while ($user = $active_users->fetch_assoc()): 
+                                ?>
+                                <tr>
+                                    <td><?php echo $rank++; ?></td>
+                                    <td><?php echo htmlspecialchars($user['full_name']); ?><br>
+                                        <small class="text-muted"><?php echo htmlspecialchars($user['email']); ?></small>
+                                    </td>
+                                    <td><?php echo htmlspecialchars($user['department']); ?></td>
+                                    <td><span class="badge badge-info"><?php echo $user['booking_count']; ?></span></td>
+                                    <td><span class="badge badge-success"><?php echo $user['approved_count']; ?></span></td>
+                                </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Trends -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-calendar-alt"></i> Monthly Booking Trends (Last 6 Months)
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th>Total Bookings</th>
+                                    <th>Approved</th>
+                                    <th>Approval Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php while ($trend = $monthly_trends->fetch_assoc()): 
+                                    $approval_rate = $trend['total_bookings'] > 0 ? 
+                                        round(($trend['approved_bookings'] / $trend['total_bookings']) * 100) : 0;
+                                ?>
+                                <tr>
+                                    <td><?php echo date('M Y', strtotime($trend['month'] . '-01')); ?></td>
+                                    <td><?php echo $trend['total_bookings']; ?></td>
+                                    <td><?php echo $trend['approved_bookings']; ?></td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-success" role="progressbar" 
+                                                 style="width: <?php echo $approval_rate; ?>%" 
+                                                 aria-valuenow="<?php echo $approval_rate; ?>" 
+                                                 aria-valuemin="0" aria-valuemax="100">
+                                                <?php echo $approval_rate; ?>%
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category-wise Utilization -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-tags"></i> Category-wise Resource Utilization
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Resources</th>
+                                    <th>Total Bookings</th>
+                                    <th>Avg per Resource</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php while ($cat = $category_stats->fetch_assoc()): 
+                                    $avg = $cat['total_resources'] > 0 ? 
+                                        round($cat['total_bookings'] / $cat['total_resources'], 1) : 0;
+                                ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($cat['category_name']); ?></td>
+                                    <td><?php echo $cat['total_resources']; ?></td>
+                                    <td><span class="badge badge-primary"><?php echo $cat['total_bookings']; ?></span></td>
+                                    <td><?php echo $avg; ?></td>
+                                </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php include '../includes/footer.php'; ?>
