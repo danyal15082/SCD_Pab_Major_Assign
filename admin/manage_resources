@@ -1,0 +1,108 @@
+<?php
+/**
+ * Manage Resources - Admin
+ * Classroom Resource Booking System
+ */
+
+require_once '../config/config.php';
+requireAdmin();
+
+$conn = getDBConnection();
+
+// Handle resource deletion
+if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
+    $resource_id = intval($_GET['delete']);
+    
+    $sql = "DELETE FROM resources WHERE resource_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $resource_id);
+    
+    if ($stmt->execute()) {
+        setFlashMessage('Resource deleted successfully!', 'success');
+    } else {
+        setFlashMessage('Failed to delete resource. It may have active bookings.', 'error');
+    }
+    $stmt->close();
+    
+    redirect(SITE_URL . '/admin/manage_resources.php');
+}
+
+// Get all resources with category info
+$sql = "SELECT r.*, rc.category_name, 
+        (SELECT COUNT(*) FROM bookings WHERE resource_id = r.resource_id) as total_bookings
+        FROM resources r
+        LEFT JOIN resource_categories rc ON r.category_id = rc.category_id
+        ORDER BY r.created_at DESC";
+$resources = executeQuery($conn, $sql);
+
+closeDBConnection($conn);
+
+$page_title = 'Manage Resources';
+include '../includes/header.php';
+?>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-door-open"></i> Manage Resources</h2>
+        <div>
+            <a href="<?php echo SITE_URL; ?>/admin/add_resource.php" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Resource
+            </a>
+            <a href="<?php echo SITE_URL; ?>/admin/manage_categories.php" class="btn btn-secondary">
+                <i class="fas fa-tags"></i> Manage Categories
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Capacity</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Bookings</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php while ($resource = $resources->fetch_assoc()): ?>
+                        <tr>
+                            <td><?php echo $resource['resource_id']; ?></td>
+                            <td><strong><?php echo htmlspecialchars($resource['resource_code'] ?? ''); ?></strong></td>
+                            <td><?php echo htmlspecialchars($resource['resource_name'] ?? ''); ?></td>
+                            <td><?php echo htmlspecialchars($resource['category_name'] ?? ''); ?></td>
+                            <td><?php echo $resource['capacity']; ?></td>
+                            <td><?php echo htmlspecialchars($resource['location'] ?? ''); ?></td>
+                            <td>
+                                <span class="badge <?php echo getResourceStatusBadge($resource['status']); ?>">
+                                    <?php echo ucfirst($resource['status']); ?>
+                                </span>
+                            </td>
+                            <td><?php echo $resource['total_bookings']; ?></td>
+                            <td>
+                                <a href="<?php echo SITE_URL; ?>/admin/edit_resource.php?id=<?php echo $resource['resource_id']; ?>" 
+                                   class="btn btn-sm btn-info" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="?delete=<?php echo $resource['resource_id']; ?>" 
+                                   class="btn btn-sm btn-danger confirm-delete" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php include '../includes/footer.php'; ?>
