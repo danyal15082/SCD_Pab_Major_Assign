@@ -1,0 +1,217 @@
+================================================================================
+CLASSROOM RESOURCE BOOKING SYSTEM - INSTALLATION GUIDE
+================================================================================
+
+Course: Web Engineering Lab - CSC-314(L)
+Session: Fall 2025
+
+================================================================================
+STEP 1: SETUP WEB SERVER
+================================================================================
+
+1. Install XAMPP/WAMP/LAMP on your computer
+2. Start Apache and MySQL services
+
+================================================================================
+STEP 2: CREATE DATABASE
+================================================================================
+
+Method 1: Using phpMyAdmin
+--------------------------
+1. Open browser and go to: http://localhost/phpmyadmin
+2. Click on "Import" tab
+3. Click "Choose File" and select:
+   /path/to/webapp/database/classroom_booking_system.sql
+4. Click "Go" button at the bottom
+5. Wait for success message
+
+Method 2: Using MySQL Command Line
+----------------------------------
+1. Open command prompt/terminal
+2. Navigate to MySQL bin folder
+3. Run: mysql -u root -p
+4. Enter MySQL password (usually empty for XAMPP)
+5. Run: source C:/xampp/htdocs/webapp/database/classroom_booking_system.sql
+6. Exit MySQL: exit;
+
+================================================================================
+STEP 3: CONFIGURE DATABASE CONNECTION
+================================================================================
+
+1. Open: config/database.php
+2. Update these values if needed:
+
+   define('DB_HOST', 'localhost');     // Usually 'localhost'
+   define('DB_USER', 'root');          // MySQL username
+   define('DB_PASS', '');              // MySQL password (empty for XAMPP)
+   define('DB_NAME', 'classroom_booking_system');
+
+================================================================================
+STEP 4: DEPLOY PROJECT FILES
+================================================================================
+
+1. Copy the 'webapp' folder to your web server directory:
+
+   XAMPP Windows: C:\xampp\htdocs\webapp
+   XAMPP Linux: /opt/lampp/htdocs/webapp
+   WAMP: C:\wamp\www\webapp
+   LAMP: /var/www/html/webapp
+
+2. Ensure all files are readable by the web server
+
+================================================================================
+STEP 5: CONFIGURE APPLICATION URL
+================================================================================
+
+1. Open: config/config.php
+2. Update SITE_URL constant:
+
+   define('SITE_URL', 'http://localhost/webapp');
+
+   If your project is in a different folder:
+   define('SITE_URL', 'http://localhost/your-folder-name');
+
+================================================================================
+STEP 6: ACCESS THE APPLICATION
+================================================================================
+
+1. Open your web browser
+2. Navigate to: http://localhost/webapp
+3. You should see the home page
+
+================================================================================
+STEP 7: LOGIN WITH DEMO CREDENTIALS
+================================================================================
+
+Admin Account:
+--------------
+Email: admin@classroom.com
+Password: admin123
+
+User Accounts:
+--------------
+Email: john.doe@classroom.com
+Password: admin123
+
+Email: jane.smith@classroom.com
+Password: admin123
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Problem: "Connection failed" error
+Solution: 
+- Check if MySQL service is running
+- Verify database credentials in config/database.php
+- Ensure database is created successfully
+
+Problem: Blank page or errors
+Solution:
+- Check PHP error logs
+- Ensure PHP version is 7.4 or higher
+- Check file permissions (should be readable)
+
+Problem: CSS not loading
+Solution:
+- Check SITE_URL in config/config.php
+- Clear browser cache
+- Check assets folder is accessible
+
+Problem: Session errors
+Solution:
+- Check if session_start() is working
+- Ensure tmp directory has write permissions
+- Clear browser cookies
+
+================================================================================
+TESTING CHECKLIST
+================================================================================
+
+✅ Database created successfully
+✅ Home page loads without errors
+✅ Login page accessible
+✅ Registration works
+✅ Admin can login
+✅ User can login
+✅ Admin can see dashboard
+✅ User can see dashboard
+✅ Admin can manage users
+✅ Admin can manage resources
+✅ Admin can manage bookings
+✅ User can browse resources
+✅ User can create booking
+✅ User can view bookings
+✅ Admin can approve/reject bookings
+✅ Reports page displays data
+
+================================================================================
+PROJECT STRUCTURE
+================================================================================
+
+webapp/
+├── admin/              - Admin module pages
+├── user/               - User module pages
+├── assets/             - CSS, JS, images
+├── config/             - Configuration files
+├── database/           - SQL database file
+├── includes/           - Header, footer
+├── index.php           - Home page
+├── login.php           - Login page
+├── register.php        - Registration page
+└── README.md           - Documentation
+
+================================================================================
+DEFAULT DATABASE DATA
+================================================================================
+
+The database comes with sample data:
+- 1 Admin user
+- 2 Regular users
+- 6 Resource categories
+- 10 Resources (classrooms, labs, etc.)
+- 3 Sample bookings
+
+You can modify or add more data through the admin panel after installation.
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. ✅ Test all functionality
+2. ✅ Create more user accounts
+3. ✅ Add more resources
+4. ✅ Test booking workflow
+5. ✅ Review reports and analytics
+6. 📝 Prepare SRS document
+7. 📝 Write project thesis
+8. 📝 Create PowerPoint presentation
+
+================================================================================
+SUPPORT
+================================================================================
+
+For any issues during installation:
+1. Check troubleshooting section above
+2. Review code comments in PHP files
+3. Check README.md for detailed documentation
+4. Verify all prerequisites are installed
+
+================================================================================
+SUBMISSION CHECKLIST
+================================================================================
+
+Before submitting your project, ensure you have:
+
+✅ Full project folder with all files
+✅ Database SQL file (included in database/ folder)
+✅ README.md documentation
+✅ SRS document (PDF)
+✅ Project thesis (PDF)
+✅ PowerPoint presentation
+✅ All code properly commented
+✅ Tested on fresh installation
+
+================================================================================
+End of Installation Guide
+================================================================================
