@@ -1,0 +1,121 @@
+<?php
+/**
+ * Manage Resource Categories - Admin
+ * Classroom Resource Booking System
+ */
+
+require_once '../config/config.php';
+requireAdmin();
+
+$conn = getDBConnection();
+
+// Handle category deletion
+if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
+    $category_id = intval($_GET['delete']);
+    
+    $sql = "DELETE FROM resource_categories WHERE category_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $category_id);
+    
+    if ($stmt->execute()) {
+        setFlashMessage('Category deleted successfully!', 'success');
+    } else {
+        setFlashMessage('Failed to delete category. It may have associated resources.', 'error');
+    }
+    $stmt->close();
+    
+    redirect(SITE_URL . '/admin/manage_categories.php');
+}
+
+// Get all categories with resource count
+$sql = "SELECT rc.*, 
+        (SELECT COUNT(*) FROM resources WHERE category_id = rc.category_id) as resource_count
+        FROM resource_categories rc
+        ORDER BY rc.category_name ASC";
+$categories = executeQuery($conn, $sql);
+
+closeDBConnection($conn);
+
+$page_title = 'Manage Categories';
+include '../includes/header.php';
+?>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-list"></i> Manage Categories</h2>
+        <div>
+            <a href="<?php echo SITE_URL; ?>/admin/add_category.php" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Category
+            </a>
+        </div>
+    </div>
+
+    <!-- Flash Message -->
+    <?php 
+    $flash = getFlashMessage();
+    if ($flash): 
+    ?>
+        <div class="alert alert-<?php echo $flash['type'] === 'error' ? 'danger' : $flash['type']; ?> alert-dismissible fade show" role="alert">
+            <?php echo $flash['message']; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
+    <!-- Categories Table -->
+    <?php if ($categories && $categories->num_rows > 0): ?>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Category ID</th>
+                    <th>Category Name</th>
+                    <th>Description</th>
+                    <th>Resources</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php while ($category = $categories->fetch_assoc()): ?>
+                <tr>
+                    <td><?php echo $category['category_id']; ?></td>
+                    <td><strong><?php echo htmlspecialchars($category['category_name'] ?? ''); ?></strong></td>
+                    <td><?php echo htmlspecialchars(substr($category['description'] ?? '', 0, 50)); ?><?php echo strlen($category['description'] ?? '') > 50 ? '...' : ''; ?></td>
+                    <td>
+                        <span class="badge bg-info"><?php echo $category['resource_count']; ?></span>
+                    </td>
+                    <td><?php echo formatDate($category['created_at']); ?></td>
+                    <td>
+                        <a href="<?php echo SITE_URL; ?>/admin/edit_category.php?id=<?php echo $category['category_id']; ?>" 
+                           class="btn btn-sm btn-info" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="?delete=<?php echo $category['category_id']; ?>" 
+                           class="btn btn-sm btn-danger confirm-delete" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php else: ?>
+    <div class="alert alert-info">
+        No categories found. <a href="<?php echo SITE_URL; ?>/admin/add_category.php">Add the first category</a>
+    </div>
+    <?php endif; ?>
+</div>
+
+<script>
+// Confirm delete
+document.querySelectorAll('.confirm-delete').forEach(link => {
+    link.addEventListener('click', function(e) {
+        if (!confirm('Are you sure you want to delete this category?')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+
+<?php include '../includes/footer.php'; ?>
