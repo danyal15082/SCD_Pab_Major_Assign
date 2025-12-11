@@ -1,0 +1,446 @@
+/**
+ * Custom Styles
+ * Classroom Resource Booking System
+ */
+
+/* General Styles */
+:root {
+    --primary-color: #4a90e2; /* Muted Blue */
+    --secondary-color: #7f8c8d; /* Cool Gray */
+    --success-color: #2ecc71; /* Soft Green */
+    --danger-color: #e74c3c; /* Warm Red */
+    --warning-color: #f1c40f; /* Amber */
+    --info-color: #3498db; /* Sky Blue */
+    --dark-color: #2c3e50; /* Charcoal */
+    --light-color: #ecf0f1; /* Off-White */
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--light-color);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* Navbar Customization */
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.3rem;
+}
+
+.navbar-brand i {
+    margin-right: 8px;
+}
+
+/* Card Styles */
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+}
+
+.card-header {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 10px 10px 0 0 !important;
+    font-weight: 600;
+}
+
+.card-header i {
+    margin-right: 8px;
+}
+
+/* Dashboard Stats Cards */
+.stats-card {
+    border-left: 4px solid var(--primary-color);
+}
+
+.stats-card.success {
+    border-left-color: var(--success-color);
+}
+
+.stats-card.warning {
+    border-left-color: var(--warning-color);
+}
+
+.stats-card.danger {
+    border-left-color: var(--danger-color);
+}
+
+.stats-card.info {
+    border-left-color: var(--info-color);
+}
+
+.stats-icon {
+    font-size: 2.5rem;
+    opacity: 0.8;
+}
+
+/* Button Customization */
+.btn {
+    border-radius: 5px;
+    padding: 8px 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn i {
+    margin-right: 5px;
+}
+
+.btn-sm i {
+    margin-right: 3px;
+}
+
+/* Table Styles */
+.table {
+    background-color: white;
+    border-radius: 8px;
+}
+
+.table thead th {
+    border-top: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    background-color: var(--light-color);
+}
+
+.table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Badge Customization */
+.badge {
+    padding: 6px 12px;
+    font-weight: 500;
+    border-radius: 5px;
+}
+
+/* Form Styles */
+.form-control {
+    border-radius: 5px;
+    border: 1px solid #ced4da;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+.required::after {
+    content: " *";
+    color: var(--danger-color);
+}
+
+/* Login/Register Page */
+.auth-container {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-card {
+    max-width: 450px;
+    margin: 0 auto;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-header i {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+/* Resource Card */
+.resource-card {
+    height: 100%;
+    cursor: pointer;
+}
+
+.resource-card img {
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10px 10px 0 0;
+}
+
+.resource-info {
+    padding: 15px;
+}
+
+.resource-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--dark-color);
+}
+
+.resource-meta {
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+}
+
+.resource-meta i {
+    margin-right: 5px;
+    width: 20px;
+}
+
+/* Booking Timeline */
+.booking-timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.booking-timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: var(--primary-color);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -26px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    border: 2px solid white;
+}
+
+/* Modal Customization */
+.modal-header {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 10px 10px 0 0;
+}
+
+.modal-content {
+    border-radius: 10px;
+    border: none;
+}
+
+/* Alert Customization */
+.alert {
+    border-radius: 8px;
+    border: none;
+    padding: 15px 20px;
+}
+
+.alert i {
+    margin-right: 10px;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+}
+
+footer a {
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+footer a:hover {
+    color: white !important;
+}
+
+/* Loading Spinner */
+.spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+/* Validation Error */
+.invalid-feedback {
+    display: block;
+    color: var(--danger-color);
+    font-size: 0.875rem;
+    margin-top: 5px;
+}
+
+.is-invalid {
+    border-color: var(--danger-color);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--secondary-color);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-state h4 {
+    margin-bottom: 10px;
+    color: var(--dark-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .table {
+        font-size: 0.85rem;
+    }
+    
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+    
+    .card-header {
+        font-size: 0.95rem;
+    }
+    
+    .stats-icon {
+        font-size: 2rem;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .navbar, footer, .btn, .no-print {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+}
+
+/* Utility Classes */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.text-muted-light {
+    color: #8a9199 !important;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+}
+
+.bg-gradient-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+
+        /* Bootstrap & general overrides to ensure site palette applies */
+        :root {
+            --primary-color: #4a90e2; /* Muted Blue */
+            --secondary-color: #7f8c8d; /* Cool Gray */
+            --success-color: #2ecc71; /* Soft Green */
+            --danger-color: #e74c3c; /* Warm Red */
+            --warning-color: #f1c40f; /* Amber */
+            --info-color: #3498db; /* Sky Blue */
+        }
+
+        /* Bootstrap primary/background and buttons */
+        .bg-primary,
+        .navbar.bg-primary,
+        .btn-primary,
+        .badge-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+            color: #ffffff !important;
+        }
+
+        .btn-primary:hover,
+        .btn-primary:focus,
+        .bg-primary:hover {
+            background-color: #3a78c4 !important;
+            border-color: #3a78c4 !important;
+        }
+
+        /* Navbar links dark theme overrides */
+        .navbar-dark .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+        .navbar-dark .navbar-nav .nav-link:hover,
+        .navbar-dark .navbar-nav .nav-link.active {
+            color: var(--accent-secondary) !important;
+        }
+
+        /* Navbar brand color and overall navbar background mapping */
+        .navbar {
+            background-color: var(--primary-color) !important;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+        .navbar .navbar-brand, .navbar .navbar-brand i { color: #fff !important; }
+        .navbar .nav-link { color: rgba(255,255,255,0.9) !important; }
+
+        /* Text and accent mapping */
+        .text-primary { color: var(--primary-color) !important; }
+        .text-secondary { color: var(--secondary-color) !important; }
+
+        /* Form control focus */
+        .form-control:focus { border-color: var(--primary-color) !important; box-shadow: 0 0 0 .2rem rgba(74,144,226,0.25) !important; }
+
+        /* Default badge colors */
+        .badge-success { background-color: var(--success-color) !important; }
+        .badge-danger { background-color: var(--danger-color) !important; }
+
+        /* Simple button variations */
+        .btn-secondary { background-color: var(--secondary-color) !important; color: #fff !important; border-color: var(--secondary-color) !important; }
+
+        /* End of overrides */
